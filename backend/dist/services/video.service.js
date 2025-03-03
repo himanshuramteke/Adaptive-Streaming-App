@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.processVideoForHLS = void 0;
 const fs_1 = __importDefault(require("fs"));
 const fluent_ffmpeg_1 = __importDefault(require("fluent-ffmpeg"));
+const movie_repository_1 = require("../repositories/movie.repository");
 ;
 const resolutions = [
     { width: 1920, height: 1080, bitRate: 2000 }, //1080p
@@ -14,11 +15,13 @@ const resolutions = [
     { width: 640, height: 360, bitRate: 400 }, //360p
 ];
 const processVideoForHLS = (inputPath, outputPath, callback) => {
+    (0, movie_repository_1.createMovie)(outputPath);
     fs_1.default.mkdirSync(outputPath, { recursive: true }); //It will create the output directory
     const masterPlaylist = `${outputPath}/master.m3u8`; //Path to the master playlist file
     const masterContent = [];
     let countProcessing = 0;
     resolutions.forEach((resolution) => {
+        console.log(`Processing video for resolution: ${resolution.width}x${resolution.height}`);
         const variantOutput = `${outputPath}/${resolution.height}p`;
         const variantPlaylist = `${variantOutput}/playlist.m3u8`; //Path to the variant playlist
         fs_1.default.mkdirSync(variantOutput, { recursive: true });
@@ -42,6 +45,7 @@ const processVideoForHLS = (inputPath, outputPath, callback) => {
                 console.log(masterContent);
                 //When the processing ends for all the resolution, create the master playlist
                 fs_1.default.writeFileSync(masterPlaylist, `#EXTM3U\n${masterContent.join('\n')}`);
+                (0, movie_repository_1.updateMovieStatus)(outputPath, 'COMPLETED');
                 callback(null, masterPlaylist); //Call the callback with the master playlist path
             }
         })

@@ -7,9 +7,12 @@ const express_1 = __importDefault(require("express"));
 const server_config_1 = require("./config/server.config");
 const routes_1 = __importDefault(require("./routes"));
 const cors_1 = __importDefault(require("cors"));
+const path_1 = __importDefault(require("path"));
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use('/api', routes_1.default);
+console.log(path_1.default.join(__dirname, '../output'));
+app.use('/output', express_1.default.static(path_1.default.join(__dirname, '../output')));
 app.listen(server_config_1.PORT, () => {
     console.log(`Server is running on port ${server_config_1.PORT}`);
 });

@@ -1,5 +1,6 @@
 import fs from 'fs';
 import ffmpeg from 'fluent-ffmpeg';
+import { createMovie, updateMovieStatus } from '../repositories/movie.repository';
 
 interface Resolution {
     width: number,
@@ -18,6 +19,9 @@ export const processVideoForHLS =  (
     inputPath: string, 
     outputPath: string,
     callback: (error: Error | null, masterPlaylist?: string) => void) : void => {
+
+        createMovie(outputPath);
+
         fs.mkdirSync(outputPath, { recursive: true }); //It will create the output directory
 
         const masterPlaylist = `${outputPath}/master.m3u8`; //Path to the master playlist file
@@ -27,7 +31,7 @@ export const processVideoForHLS =  (
         let countProcessing = 0;
 
         resolutions.forEach((resolution) => {
-
+            console.log(`Processing video for resolution: ${resolution.width}x${resolution.height}`);          
             const variantOutput = `${outputPath}/${resolution.height}p`;
             const variantPlaylist = `${variantOutput}/playlist.m3u8`; //Path to the variant playlist
 
@@ -55,6 +59,9 @@ export const processVideoForHLS =  (
                         console.log(masterContent);
                       //When the processing ends for all the resolution, create the master playlist
                       fs.writeFileSync(masterPlaylist, `#EXTM3U\n${masterContent.join('\n')}`);
+
+                      updateMovieStatus(outputPath, 'COMPLETED');
+
                       callback(null, masterPlaylist); //Call the callback with the master playlist path
                     }
                 })
